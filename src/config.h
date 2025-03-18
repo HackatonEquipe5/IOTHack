@@ -18,9 +18,10 @@
 #define TOPIC_COMMAND_START "command/start"
 #define TOPIC_RESERVATION_CANCEL "reservation/cancel"
 #define TOPIC_RESERVATION "reservation"
+#define TOPIC_MAINTENANCE "maintenance"
 #define TOPIC_NOTIFICATION "notification"
 
-
+//Plus utiliser
 #define TOPIC_STOCK "stock"
 #define TOPIC_ALERTE "alerte" //Peut être utile plus tard
 #define TOPIC_ERREUR "erreur"
@@ -34,6 +35,8 @@ const int greenPins[] = {26, 33, 12};
 const int bluePins[] = {27, 34, 13};
 extern const char* machineIDs[3];
 
+// Variable IOT
+const int nbrMachine = 3;
 #define PIN_LED 2
 #define ADRESS 0x77
 
