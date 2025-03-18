@@ -12,27 +12,33 @@ void connectMQTT() {
     if (!client.connected()) {
         digitalWrite(PIN_LED, HIGH);
         client.setServer(MQTT_SERVER, 1883);
+
         while (!client.connected()) {
-            Serial.print("Connexion MQTT...");
+            Serial.print("Connexion MQTT... ");
             if (client.connect(ID_CLIENT_MQTT)) {
-                Serial.println("Connecté au serveur MQTT !");
+                Serial.println("Connecté !");
+
                 String topic = String(TOPIC_ROOT) + "/#";
                 client.subscribe(topic.c_str());
             } else {
-                Serial.print("Échec, code erreur : ");
-                int state = client.state();
-                Serial.println(state);
-                
-                switch (state) {
-                    case -2: Serial.println("Erreur : Connexion échouée au réseau"); break;
-                    case -1: Serial.println("Erreur : Serveur inaccessible"); break;
-                    default: Serial.println("Erreur inconnue"); break;
+                Serial.print("Echec, code erreur : ");
+                Serial.println(client.state());
+
+                if (client.state() == -2) {
+                    Serial.println("Erreur : Connexion échouée au réseau");
+                } else if (client.state() == -1) {
+                    Serial.println("Erreur : Serveur MQTT inaccessible");
+                } else {
+                    Serial.println("Erreur inconnue");
                 }
+
                 delay(5000);
             }
         }
+
         digitalWrite(PIN_LED, LOW);
     }
+    client.loop();  // Maintenir la connexion active
 }
 
 // =============================
@@ -40,8 +46,7 @@ void connectMQTT() {
 // =============================
 void publishMessage(const char *topic, const String &payload, const char *idname) {
     String fullTopic = String(TOPIC_ROOT) + "/" + String(idname) + "/" + String(topic);
-    client.publish(fullTopic.c_str(), payload.c_str());
-    
+
     Serial.print("Envoyé : ");
     Serial.print(fullTopic);
     Serial.print(" : ");
@@ -51,7 +56,7 @@ void publishMessage(const char *topic, const String &payload, const char *idname
 void publishMessageNotif(const String &payload, const char *idname) {
     String topicnotif = String(TOPIC_ROOT) + "/" + String(idname) + "/" + String(TOPIC_NOTIFICATION);
     client.publish(topicnotif.c_str(), payload.c_str());
-    
+
     Serial.print("Notification envoyée : ");
     Serial.println(payload);
 }
@@ -79,56 +84,49 @@ void callback(char* topic, byte* payload, unsigned int length) {
     }
     Serial.println(message);
 
-    for (int i = 0; i < nbrMachine; i++) {
-        //Définition des topics pour chaque machine
+    for (int i = 0; i < 3; i++) {
+        // Définition des topics pour chaque machine
         String startTopic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + "/" + String(TOPIC_COMMAND_START);
         String cancelTopic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + "/" + String(TOPIC_RESERVATION_CANCEL);
         String reserveTopic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + "/" + String(TOPIC_RESERVATION);
         String expectedTopic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + "/" + String(TOPIC_COMMAND);
         String maintenanceTopic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + "/" + String(TOPIC_MAINTENANCE);
 
-        //**Début de la préparation**
         if (String(topic) == startTopic) {
-            Serial.println("Préparation café pour " + String(machineIDs[i]) + " : " + message);
+            Serial.println("Préparation d'un café pour la machine " + String(machineIDs[i]) + " : " + message);
             publishMessage(TOPIC_COMMAND_START, "Préparation en cours : " + message, machineIDs[i]);
-            setLED(i, 0, 0, 255); // LED bleue
+            setLED(i, 0, 0, 255); // LED bleue pour signaler la préparation
+            delay(5000);
             
-            delay(5000); // Simulation du temps de préparation
-            
-            publishMessageNotif("Café prêt", machineIDs[i]);
-            setLED(i, 0, 0, 0); // Éteindre LED après préparation
+            publishMessageNotif("Cafe pret", machineIDs[i]);
+            setLED(i, 0, 0, 0);
         } 
-        //**Annulation de réservation**
         else if (String(topic) == cancelTopic) {
-            Serial.println("Réservation annulée sur " + String(machineIDs[i]));
+            Serial.println("Réservation annulée sur la machine " + String(machineIDs[i]));
             publishMessage(TOPIC_RESERVATION_CANCEL, "Réservation annulée", machineIDs[i]);
-            setLED(i, 255, 0, 0); // LED rouge
-            
+            setLED(i, 255, 0, 0); // LED rouge pour annulation
             delay(2000);
             setLED(i, 0, 0, 0);
         }
-        //**Nouvelle réservation**
         else if (String(topic) == reserveTopic) {
             Serial.println("Réservation reçue : " + message);
             publishMessage(TOPIC_RESERVATION, "Réservation confirmée : " + message, machineIDs[i]);
-            setLED(i, 255, 105, 180); // LED rose
+            setLED(i, 255, 105, 180); // LED rose pour indiquer la réservation
         }
-        // **Commande de la machine**
         else if (String(topic) == expectedTopic) {
-            Serial.println("Commande reçue pour " + String(machineIDs[i]));
+            Serial.println("Commande reçue pour la machine " + String(machineIDs[i]));
             if (message == "start") {
                 publishMessage(TOPIC_STATUS, "Préparation en cours", machineIDs[i]);
                 setLED(i, 0, 255, 0); // LED verte
                 Serial.println("LED verte allumée");
             } else if (message == "stop") {
                 publishMessage(TOPIC_STATUS, "Arrêt", machineIDs[i]);
-                setLED(i, 0, 0, 0); // Éteindre LED
+                setLED(i, 0, 0, 0); // LED éteinte
                 Serial.println("LED éteinte");
             }
         }
-        //**Maintenance**
-        else if (String(topic) == maintenanceTopic) {
-            Serial.println("🔧 Maintenance en cours sur " + String(machineIDs[i]) + " : " + message);
+        if (String(topic) == maintenanceTopic) {
+            Serial.println("Maintenance " + String(machineIDs[i]) + " : " + message);
             publishMessage(TOPIC_MAINTENANCE, "Préparation en cours : " + message, machineIDs[i]);
             setLED(i, 255, 0, 0); // LED rouge
             publishMessageNotif(message, machineIDs[i]);
