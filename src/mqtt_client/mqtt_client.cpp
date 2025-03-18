@@ -71,33 +71,33 @@ void setLED(int machineIndex, int red, int green, int blue) {
     analogWrite(bluePins[machineIndex], blue);
 }
 
-// void callback(char* topic, byte* payload, unsigned int length) {
-//     Serial.print("Message reçu [");
-//     Serial.print(topic);
-//     Serial.print("] : ");
-//     String message = "";
-//     for (unsigned int i = 0; i < length; i++) {
-//         message += (char)payload[i];
-//     }
-//     Serial.println(message);
+void callback(char* topic, byte* payload, unsigned int length) {
+    Serial.print("Message reçu [");
+    Serial.print(topic);
+    Serial.print("] : ");
+    String message = "";
+    for (unsigned int i = 0; i < length; i++) {
+        message += (char)payload[i];
+    }
+    Serial.println(message);
 
-//     // Vérification du message reçu
-//     for (int i = 0; i < 3; i++) {
-//         String expectedTopic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + "/" + String(TOPIC_COMMAND);
-//         if (String(topic) == expectedTopic) {
-//             Serial.println("Commande reçue pour la machine " + String(machineIDs[i]));
-//             if (message == "start") {
-//                 publishMessage(TOPIC_STATUS, "Préparation en cours", machineIDs[i]);
-//                 setLED(i, 0, 0, 255); // LED bleue
-//                 Serial.println("LED bleue allumée");
-//             } else if (message == "stop") {
-//                 publishMessage(TOPIC_STATUS, "Arrêt", machineIDs[i]);
-//                 setLED(i, 255, 0, 0); // LED rouge
-//                 Serial.println("LED rouge allumée");
-//             }
-//         }
-//     }
-// }
+    // Vérification du message reçu
+    for (int i = 0; i < 3; i++) {
+        String expectedTopic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + "/" + String(TOPIC_COMMAND);
+        if (String(topic) == expectedTopic) {
+            Serial.println("Commande reçue pour la machine " + String(machineIDs[i]));
+            if (message == "start") {
+                publishMessage(TOPIC_STATUS, "Préparation en cours", machineIDs[i]);
+                setLED(i, 0, 0, 255); // LED bleue
+                Serial.println("LED bleue allumée");
+            } else if (message == "stop") {
+                publishMessage(TOPIC_STATUS, "Arrêt", machineIDs[i]);
+                setLED(i, 255, 0, 0); // LED rouge
+                Serial.println("LED rouge allumée");
+            }
+        }
+    }
+}
 
 void callback(char* topic, byte* payload, unsigned int length) {
     Serial.print("Message reçu [");
@@ -111,9 +111,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
     Serial.println(message);
 
     for (int i = 0; i < 3; i++) {
-        String startTopic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + String(TOPIC_COMMAND_START);
-        String cancelTopic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + String(TOPIC_RESERVATION_CANCEL);
-        String reserveTopic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + String(TOPIC_RESERVATION);
+        String startTopic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + "/" + String(TOPIC_COMMAND_START);
+        String cancelTopic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + "/" + String(TOPIC_RESERVATION_CANCEL);
+        String reserveTopic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + "/" + String(TOPIC_RESERVATION);
+        String expectedTopic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + "/" + String(TOPIC_COMMAND);
 
         if (String(topic) == startTopic) {
             Serial.println("Préparation d'un café pour la machine " + String(machineIDs[i]) + " : " + message);
@@ -129,6 +130,18 @@ void callback(char* topic, byte* payload, unsigned int length) {
             Serial.println("Réservation reçue : " + message);
             publishMessage(TOPIC_RESERVATION, "Réservation confirmée : " + message, machineIDs[i]);
             setLED(i, 255, 105, 180); // LED rose pour indiquer la réservation
+        }
+        else if (String(topic) == expectedTopic) {
+            Serial.println("Commande reçue pour la machine " + String(machineIDs[i]));
+            if (message == "start") {
+                publishMessage(TOPIC_STATUS, "Préparation en cours", machineIDs[i]);
+                setLED(i, 0, 255, 0); // LED bleue
+                Serial.println("LED bleue allumée");
+            } else if (message == "stop") {
+                publishMessage(TOPIC_STATUS, "Arrêt", machineIDs[i]);
+                setLED(i, 0, 0, 0); // LED rouge
+                Serial.println("LED rouge allumée");
+            }
         }
     }
 }
