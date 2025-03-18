@@ -18,7 +18,7 @@ void connectMQTT()
             {
                 Serial.println("Connecté au serveur MQTT!");
                 for (int i = 0; i < 3; i++) {
-                    String topic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + "/" + String(TOPIC_COMMAND);
+                    String topic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + "/#";
                     client.subscribe(topic.c_str());
                 }
                 
@@ -75,34 +75,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
     Serial.print("Message reçu [");
     Serial.print(topic);
     Serial.print("] : ");
-    String message = "";
-    for (unsigned int i = 0; i < length; i++) {
-        message += (char)payload[i];
-    }
-    Serial.println(message);
-
-    // Vérification du message reçu
-    for (int i = 0; i < 3; i++) {
-        String expectedTopic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + "/" + String(TOPIC_COMMAND);
-        if (String(topic) == expectedTopic) {
-            Serial.println("Commande reçue pour la machine " + String(machineIDs[i]));
-            if (message == "start") {
-                publishMessage(TOPIC_STATUS, "Préparation en cours", machineIDs[i]);
-                setLED(i, 0, 0, 255); // LED bleue
-                Serial.println("LED bleue allumée");
-            } else if (message == "stop") {
-                publishMessage(TOPIC_STATUS, "Arrêt", machineIDs[i]);
-                setLED(i, 255, 0, 0); // LED rouge
-                Serial.println("LED rouge allumée");
-            }
-        }
-    }
-}
-
-void callback(char* topic, byte* payload, unsigned int length) {
-    Serial.print("Message reçu [");
-    Serial.print(topic);
-    Serial.print("] : ");
     
     String message = "";
     for (unsigned int i = 0; i < length; i++) {
@@ -135,12 +107,12 @@ void callback(char* topic, byte* payload, unsigned int length) {
             Serial.println("Commande reçue pour la machine " + String(machineIDs[i]));
             if (message == "start") {
                 publishMessage(TOPIC_STATUS, "Préparation en cours", machineIDs[i]);
-                setLED(i, 0, 255, 0); // LED bleue
-                Serial.println("LED bleue allumée");
+                setLED(i, 0, 255, 0); // LED vert
+                Serial.println("LED vert allumée");
             } else if (message == "stop") {
                 publishMessage(TOPIC_STATUS, "Arrêt", machineIDs[i]);
-                setLED(i, 0, 0, 0); // LED rouge
-                Serial.println("LED rouge allumée");
+                setLED(i, 0, 0, 0); // LED off
+                Serial.println("LED off allumée");
             }
         }
     }
