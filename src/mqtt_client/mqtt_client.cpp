@@ -17,11 +17,8 @@ void connectMQTT()
             if (client.connect(ID_CLIENT_MQTT))
             {
                 Serial.println("Connecté au serveur MQTT!");
-                for (int i = 0; i < 3; i++) {
-                    String topic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + "/#";
-                    client.subscribe(topic.c_str());
-                }
-                
+                String topic = String(TOPIC_ROOT) + "/#";
+                client.subscribe(topic.c_str());
             }
             else
             {
