@@ -15,6 +15,12 @@
 
 #define TOPIC_STATUS "status"
 #define TOPIC_COMMAND "command"
+#define TOPIC_COMMAND_START "command/start"
+#define TOPIC_RESERVATION_CANCEL "reservation/cancel"
+#define TOPIC_RESERVATION "reservation"
+
+
+
 #define TOPIC_STOCK "stock"
 #define TOPIC_ALERTE "alerte" //Peut être utile plus tard
 #define TOPIC_ERREUR "erreur"

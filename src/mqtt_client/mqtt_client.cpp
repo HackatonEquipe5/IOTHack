@@ -45,15 +45,26 @@ void connectMQTT()
     }
 }
 
-void publishMessage(const char *topic, const char *payload, const char *idname)
-{
+// void publishMessage(const char *topic, const char *payload, const char *idname)
+// {
+//     String fullTopic = String(TOPIC_ROOT) + "/" + String(idname) + "/" + String(topic);
+//     client.publish(fullTopic.c_str(), payload);
+//     Serial.print("Send :");
+//     Serial.print(fullTopic);
+//     Serial.print(" :");
+//     Serial.println(payload);
+// }
+
+void publishMessage(const char *topic, const String &payload, const char *idname) {
     String fullTopic = String(TOPIC_ROOT) + "/" + String(idname) + "/" + String(topic);
-    client.publish(fullTopic.c_str(), payload);
-    Serial.print("Send :");
+
+    client.publish(fullTopic.c_str(), payload.c_str());
+    Serial.print("Send : ");
     Serial.print(fullTopic);
-    Serial.print(" :");
+    Serial.print(" : ");
     Serial.println(payload);
 }
+
 void setLED(int machineIndex, int red, int green, int blue) {
     analogWrite(redPins[machineIndex], red);
     analogWrite(greenPins[machineIndex], green);
@@ -100,26 +111,24 @@ void callback(char* topic, byte* payload, unsigned int length) {
     Serial.println(message);
 
     for (int i = 0; i < 3; i++) {
-        // Vérification du topic de commande
-        String startTopic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + "/command/start";
-        String cancelTopic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + "/command/cancel";
-        String reserveTopic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + "/reservation";
+        String startTopic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + String(TOPIC_COMMAND_START);
+        String cancelTopic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + String(TOPIC_RESERVATION_CANCEL);
+        String reserveTopic = String(TOPIC_ROOT) + "/" + String(machineIDs[i]) + String(TOPIC_RESERVATION);
 
         if (String(topic) == startTopic) {
-            Serial.println(" Préparation d'un café pour la machine " + String(machineIDs[i]));
-            setLED(i, 0, 0, 255); // Bleu
-            delay(5000);
-            setLED(i, 0, 0, 0); // Éteindre après 5s
+            Serial.println("Préparation d'un café pour la machine " + String(machineIDs[i]) + " : " + message);
+            publishMessage(TOPIC_COMMAND_START, "Préparation en cours : " + message, machineIDs[i]);
+            setLED(i, 0, 0, 255); // LED bleue pour signaler la préparation
         } 
         else if (String(topic) == cancelTopic) {
-            Serial.println(" Préparation annulée sur la machine " + String(machineIDs[i]));
-            setLED(i, 255, 0, 0); // Rouge
-            delay(2000);
-            setLED(i, 0, 0, 0); // Éteindre après 2s
+            Serial.println("Réservation annulée sur la machine " + String(machineIDs[i]));
+            publishMessage(TOPIC_RESERVATION_CANCEL, "Réservation annulée", machineIDs[i]);
+            setLED(i, 255, 0, 0); // LED rouge pour annulation
         }
         else if (String(topic) == reserveTopic) {
-            Serial.println(" Réservation reçue : " + message);
-            setLED(i, 255, 105, 180); // Rose fixe pour réservation
+            Serial.println("Réservation reçue : " + message);
+            publishMessage(TOPIC_RESERVATION, "Réservation confirmée : " + message, machineIDs[i]);
+            setLED(i, 255, 105, 180); // LED rose pour indiquer la réservation
         }
     }
 }
