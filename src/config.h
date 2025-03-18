@@ -18,7 +18,7 @@
 #define TOPIC_COMMAND_START "command/start"
 #define TOPIC_RESERVATION_CANCEL "reservation/cancel"
 #define TOPIC_RESERVATION "reservation"
-
+#define TOPIC_NOTIFICATION "notification"
 
 
 #define TOPIC_STOCK "stock"

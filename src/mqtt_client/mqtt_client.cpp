@@ -55,10 +55,17 @@ void connectMQTT()
 void publishMessage(const char *topic, const String &payload, const char *idname) {
     String fullTopic = String(TOPIC_ROOT) + "/" + String(idname) + "/" + String(topic);
 
-    client.publish(fullTopic.c_str(), payload.c_str());
+    //client.publish(fullTopic.c_str(), payload.c_str());
     Serial.print("Send : ");
     Serial.print(fullTopic);
     Serial.print(" : ");
+    Serial.println(payload);
+}
+
+void publishMessageNotif(const String &payload, const char *idname) {
+    String topicnotif = String(TOPIC_ROOT) + "/" + String(idname) + "/" + String(TOPIC_NOTIFICATION);
+    client.publish(topicnotif.c_str(), payload.c_str());
+    Serial.print("Send : ");
     Serial.println(payload);
 }
 
@@ -89,11 +96,17 @@ void callback(char* topic, byte* payload, unsigned int length) {
             Serial.println("Préparation d'un café pour la machine " + String(machineIDs[i]) + " : " + message);
             publishMessage(TOPIC_COMMAND_START, "Préparation en cours : " + message, machineIDs[i]);
             setLED(i, 0, 0, 255); // LED bleue pour signaler la préparation
+            delay(5000);
+            
+            publishMessageNotif("Cafe pret", machineIDs[i]);
+            setLED(i, 0, 0, 0);
         } 
         else if (String(topic) == cancelTopic) {
             Serial.println("Réservation annulée sur la machine " + String(machineIDs[i]));
             publishMessage(TOPIC_RESERVATION_CANCEL, "Réservation annulée", machineIDs[i]);
             setLED(i, 255, 0, 0); // LED rouge pour annulation
+            delay(2000);
+            setLED(i, 0, 0, 0);
         }
         else if (String(topic) == reserveTopic) {
             Serial.println("Réservation reçue : " + message);
